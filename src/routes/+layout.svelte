@@ -34,6 +34,7 @@
 
 			const map = L.map(mapElement, { zoomControl: false }).setView(INITIAL_VIEW, INITIAL_ZOOM);
 			let searchArea: SearchArea | undefined;
+			let searchCenter: ReturnType<typeof L.circleMarker> | undefined;
 
 			const fitArea = (lat: number, lng: number, radius: number) =>
 				map.flyToBounds(L.latLng(lat, lng).toBounds(radius * 2), { padding: [40, 40] });
@@ -48,11 +49,19 @@
 				if (!(event instanceof CustomEvent)) return;
 				const { lat, lng, radius } = event.detail as { lat: number; lng: number; radius: number };
 				searchArea?.remove();
+				searchCenter?.remove();
 				searchArea = L.circle([lat, lng], {
 					radius,
 					color: '#2f5d3a',
 					weight: 1.5,
 					fillOpacity: 0.08
+				}).addTo(map);
+				searchCenter = L.circleMarker([lat, lng], {
+					radius: 8,
+					color: '#fff',
+					weight: 3,
+					fillColor: '#2f5d3a',
+					fillOpacity: 1
 				}).addTo(map);
 				fitArea(lat, lng, radius);
 			};
@@ -68,6 +77,8 @@
 			const handleReset = () => {
 				searchArea?.remove();
 				searchArea = undefined;
+				searchCenter?.remove();
+				searchCenter = undefined;
 				map.flyTo(INITIAL_VIEW, INITIAL_ZOOM);
 			};
 
@@ -79,9 +90,7 @@
 				for (const { restaurant, marker } of pins) {
 					const matches =
 						cuisineSlug === null ||
-						restaurant.tags.some(
-							(tag) => tag.kind === 'cuisine' && tag.slug === cuisineSlug
-						);
+						restaurant.tags.some((tag) => tag.kind === 'cuisine' && tag.slug === cuisineSlug);
 					if (matches && !map.hasLayer(marker)) marker.addTo(map);
 					if (!matches && map.hasLayer(marker)) marker.remove();
 				}
@@ -252,4 +261,4 @@
 		outline: 2px solid #2563eb;
 		outline-offset: -2px;
 	}
-</style>
+</style>	
